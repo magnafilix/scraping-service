@@ -1,0 +1,1 @@
+module.exports = (url) => url.substring(0, url.indexOf('://'))
