@@ -1,5 +1,5 @@
 const rootController = require('../controllers/root')
 
 module.exports = router => {
-  router.get('/', rootController.processUrl)
+  router.get('/', rootController.getUrl)
 }
