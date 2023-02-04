@@ -20,7 +20,7 @@ class HttpsWithProxyClientService {
     this.lastRequestHostname = null;
   }
 
-  async _connectToProxy(url, proxyIndex = 0, retries = 1) {
+  async _connectToProxy(url, proxyIndex = 0, retries = 3) {
     return new Promise((resolve, reject) => {
       const urlParsed = new URL(url);
 
@@ -28,6 +28,7 @@ class HttpsWithProxyClientService {
         ...getIPHostAndPort(proxies[proxyIndex]),
         method: 'CONNECT',
         path: `${urlParsed.hostname}:443`,
+        timeout: 12500
       }
 
       console.log(options, '<-- BEFORE CONNECT');
@@ -53,16 +54,16 @@ class HttpsWithProxyClientService {
         .on('error', (err) => {
           console.log(`
             _connectToProxy on error reject | IP: ${options.host}:${options.port}
-            message: ${err.message}
+            message: ${err?.message}
           `);
-          reject(err.message)
+          reject(err?.message)
         })
         .on('timeout', (err) => {
           console.log(`
             _connectToProxy on timeout reject | IP: ${options.host}:${options.port}
-            message: ${err.message}  
+            message: ${err?.message ?? 'timeout'}
           `);
-          reject(err.message)
+          reject(err?.message ?? 'timeout')
         })
         .end();
     })
