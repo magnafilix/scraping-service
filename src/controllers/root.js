@@ -1,13 +1,13 @@
-const HttpsWithProxyClientService = require('../services/https-with-proxy-client')
+const HttpsProxyClientService = require('../services/https-proxy-client')
 
 module.exports = {
   getUrl: async (req, res) => {
     const { query: { url } } = req
 
-    const httpsClient = new HttpsWithProxyClientService();
+    const httpsProxyClient = new HttpsProxyClientService();
 
     try {
-      const { body, headers, status } = await httpsClient.getURL(url);
+      const { body, headers, status } = await httpsProxyClient.getURL(url);
       return res.status(status).json({ body, headers })
     } catch (err) {
       if (err === 'Failed to fetch data in time!') {

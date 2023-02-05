@@ -15,7 +15,7 @@ const proxies = [
   '54.206.42.168:80',
 ]
 
-class HttpsWithProxyClientService {
+class HttpsProxyClientService {
   constructor(proxyConf = null) {
     this.proxyConf = proxyConf;
     this.proxyAgent = null;
@@ -157,4 +157,4 @@ class HttpsWithProxyClientService {
   }
 }
 
-module.exports = HttpsWithProxyClientService
+module.exports = HttpsProxyClientService
