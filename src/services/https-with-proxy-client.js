@@ -23,12 +23,14 @@ class HttpsWithProxyClientService {
   async _connectToProxy(url, proxyIndex = 0, retries = 3) {
     return new Promise((resolve, reject) => {
       const urlParsed = new URL(url);
+      const ac = new AbortController();
 
       const options = {
         ...getIPHostAndPort(proxies[proxyIndex]),
         method: 'CONNECT',
         path: `${urlParsed.hostname}:443`,
-        timeout: 12500
+        timeout: 12500,
+        signal: ac.signal
       }
 
       console.log(options, '<-- BEFORE CONNECT');
@@ -64,6 +66,7 @@ class HttpsWithProxyClientService {
             message: ${err?.message ?? 'timeout'}
           `);
           reject(err?.message ?? 'timeout')
+          ac.abort()
         })
         .end();
     })
@@ -100,10 +103,10 @@ class HttpsWithProxyClientService {
 
       console.log(`getURL making GET request | ${urlParsed}`);
       console.log(`
-        ------------
-        ------------
-        ------------
-        ------------
+        ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------
       `);
 
       https
