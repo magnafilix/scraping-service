@@ -42,8 +42,6 @@ class HttpsProxyClientService {
       console.log(options, '<-- HTTP OPTIONS BEFORE CONNECT');
       console.log({ proxyIndex }, '<-- PROXY INDEX BEFORE CONNECT');
 
-      console.log(this.proxyAgent, '<-- AGENT BEFORE CONNECT');
-
       http
         .request(options)
         .on('connect', (res, socket) => {
