@@ -3,7 +3,6 @@ const redis = require('redis')
 class Redis {
   constructor() {
     this._redis = null
-
     // seconds * minutes * hours
     this.ttl = 1 * 1 * 1
   }
@@ -25,7 +24,7 @@ class Redis {
     return this._redis.set(key, value, { EX: ex })
   }
 
-  async getAll() {
+  async getAllKeys() {
     return this._redis.keys('*');
   }
 }

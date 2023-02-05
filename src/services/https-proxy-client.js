@@ -22,19 +22,18 @@ class HttpsProxyClientService {
       const urlParsed = new URL(url);
       const abortController = new AbortController();
 
-      const allKeys = await redisService.getAll();
+      const allKeys = await redisService.getAllKeys();
 
       const unusedIPs = getUnusedItems(PROXY_LIST, allKeys)
       const currentIP = unusedIPs[proxyIndex] ?? unusedIPs[0]
 
-      console.log({
+      console.info({
         allKeys,
         unusedIPs,
         currentIP
       });
 
       if (!currentIP) {
-        retries = 0
         return reject(HTTP_RESPONSE_ERROR_MESSAGES.UNAVAILABLE)
       }
 
@@ -48,37 +47,24 @@ class HttpsProxyClientService {
         signal: abortController.signal
       }
 
-      console.log(options, '<-- HTTP OPTIONS BEFORE CONNECT');
+      console.info(options, 'http request options');
 
       http
         .request(options)
         .on('connect', (res, socket) => {
           if (res.statusCode === 200) {
             console.info(`
-              _connectToProxy on connect resolve | IP: ${options.host}:${options.port}
-              code: ${res.statusCode}, message: ${res.statusMessage}
-            `);
+              socket connection established: ${currentIP}
+            `)
             resolve(new https.Agent({ socket: socket, keepAlive: true }));
           } else {
-            console.log(`
-              _connectToProxy on connect reject | IP: ${options.host}:${options.port}
-              code: ${res.statusCode}, message: ${res.statusMessage}
-            `);
             reject(res.statusMessage)
           }
         })
         .on('error', (err) => {
-          console.log(`
-            _connectToProxy on error reject | IP: ${options.host}:${options.port}
-            message: ${err?.message}
-          `);
           reject(err?.message)
         })
         .on('timeout', (err) => {
-          console.log(`
-            _connectToProxy on timeout reject | IP: ${options.host}:${options.port}
-            message: ${err?.message ?? 'timeout'}
-          `);
           reject(err?.message ?? 'timeout')
           abortController.abort()
         })
@@ -86,7 +72,7 @@ class HttpsProxyClientService {
     })
       .then(agent => agent)
       .catch(error => {
-        if (retries > 0) {
+        if (retries > 1) {
           return this._connectToProxy(url, retries - 1, proxyIndex + 1)
         }
 
@@ -106,19 +92,14 @@ class HttpsProxyClientService {
         if (proxyConnection instanceof https.Agent) {
           this.proxyAgent = proxyConnection
         } else {
+          console.info(`
+            Could not establish proxy connection: ${proxyConnection}
+          `)
           return reject(proxyConnection)
         }
-      } catch (e) {
-        return reject(e, 'reject in getURL()');
+      } catch (err) {
+        return reject(err);
       }
-
-      console.log(`getURL making GET request | ${urlParsed}`);
-      console.log(`
-        ------------ ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------ ------------
-      `);
 
       https
         .get({
@@ -149,7 +130,6 @@ class HttpsProxyClientService {
           })
         })
         .on('error', (err) => {
-          console.log(`getURL req on error reject | ${err.message}`);
           this.proxyAgent = null;
           reject(err.message);
         })
