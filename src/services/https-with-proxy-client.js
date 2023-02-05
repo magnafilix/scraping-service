@@ -6,11 +6,13 @@ const getIPHostAndPort = require('../helpers/get-ip-host-and-port')
 // free proxies: https://free-proxy-list.net/#list
 const proxies = [
   '83.175.157.49:3128', // maybe working ip
-  '116.98.72.205:8080',
-  '152.228.152.91:443',
-  '18.143.57.27:80',
-  '190.61.88.147:8080',
-  '138.91.159.185:80',
+  '118.26.110.48:8080',
+  '110.34.3.229:3128', // maybe working ip
+  '200.119.89.19:80',
+  '154.72.74.210:80',
+  '163.172.85.30:80',
+  '65.108.230.238:45977',
+  '54.206.42.168:80',
 ]
 
 class HttpsWithProxyClientService {
@@ -20,21 +22,23 @@ class HttpsWithProxyClientService {
     this.lastRequestHostname = null;
   }
 
-  async _connectToProxy(url, proxyIndex = 0, retries = 3) {
+  async _connectToProxy(url, proxyIndex = 0, retries = 5) {
     return new Promise((resolve, reject) => {
       const urlParsed = new URL(url);
-      const ac = new AbortController();
+      const abortController = new AbortController();
 
       const options = {
         ...getIPHostAndPort(proxies[proxyIndex]),
         method: 'CONNECT',
         path: `${urlParsed.hostname}:443`,
-        timeout: 12500,
-        signal: ac.signal
+        timeout: 3000,
+        signal: abortController.signal
       }
 
-      console.log(options, '<-- BEFORE CONNECT');
-      console.log({ proxyIndex }, '<-- BEFORE CONNECT');
+      console.log(options, '<-- HTTP OPTIONS BEFORE CONNECT');
+      console.log({ proxyIndex }, '<-- PROXY INDEX BEFORE CONNECT');
+
+      console.log(this.proxyAgent, '<-- AGENT BEFORE CONNECT');
 
       http
         .request(options)
@@ -66,7 +70,7 @@ class HttpsWithProxyClientService {
             message: ${err?.message ?? 'timeout'}
           `);
           reject(err?.message ?? 'timeout')
-          ac.abort()
+          abortController.abort()
         })
         .end();
     })
@@ -101,6 +105,9 @@ class HttpsWithProxyClientService {
         }
       }
 
+      console.log(this.proxyAgent, `
+        PROXY AGENT BEFORE THE REQUEST
+      `);
       console.log(`getURL making GET request | ${urlParsed}`);
       console.log(`
         ------------ ------------ ------------ ------------
