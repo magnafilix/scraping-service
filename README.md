@@ -26,4 +26,5 @@ $ redis-server
 $ npm run start
 ```
 
-When application is up and running, make request to `http://localhost:3000?url=https://www.google.com`. You should receive `body` (html) and `headers.`
+When application is up and running, make request to `http://localhost:3000?url=https://www.google.com`.
+You should receive `body` (html) and `headers`.
