@@ -5,6 +5,7 @@ const totalCPUs = require("os").cpus().length;
 require('dotenv').config()
 
 const app = require('./app');
+const redisService = require('./services/redis')
 const normalizePort = require('./helpers/normalize-port')
 
 if (cluster.isMaster) {
@@ -29,6 +30,7 @@ if (cluster.isMaster) {
   console.log(`Worker ${process.pid} started`);
 
   server.listen(port);
+
   server.on('error', (error) => {
     if (error.syscall !== 'listen') {
       throw error;
@@ -51,12 +53,21 @@ if (cluster.isMaster) {
         throw error;
     }
   });
+
   server.on('listening', () => {
+    redisService.init()
+      .then(() => {
+        console.log('Redis is running!');
+      })
+      .catch(err => {
+        console.log('Failed to run Redis', err)
+      });
+
     const addr = server.address();
     const bind = typeof addr === 'string'
       ? 'pipe ' + addr
       : 'port ' + addr.port;
-    debug('Debug: Listening on ' + bind);
-    console.info('Log: Listening on ' + bind);
+    debug('Debug: Server is listening on ' + bind);
+    console.info('Server is listening on ' + bind);
   });
 }

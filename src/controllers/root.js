@@ -10,11 +10,8 @@ module.exports = {
       const { body, headers, status } = await httpsProxyClient.getURL(url);
       return res.status(status).json({ body, headers })
     } catch (err) {
-      if (err === 'Failed to fetch data in time!') {
-        return res.status(500).json({ message: err })
-      }
       console.log(err, '-- try catch block --')
-      return res.json({ message: err })
+      return res.status(500).json({ message: err })
     }
   }
 }

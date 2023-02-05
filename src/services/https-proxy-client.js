@@ -2,37 +2,46 @@ const http = require('http')
 const https = require('https')
 
 const getIPHostAndPort = require('../helpers/get-ip-host-and-port')
+const getUnusedItems = require('../helpers/get-unused-items')
+const HTTP_RESPONSE_ERROR_MESSAGES = require('../constants/http-response-error-messages')
+const PROXY_LIST = require('../constants/proxy-list')
 
-// free proxies: https://free-proxy-list.net/#list
-const proxies = [
-  '83.175.157.49:3128', // maybe working ip
-  '118.26.110.48:8080',
-  '110.34.3.229:3128', // maybe working ip
-  '200.119.89.19:80',
-  '154.72.74.210:80',
-  '163.172.85.30:80',
-  '65.108.230.238:45977',
-  '54.206.42.168:80',
-]
+const redisService = require('./redis')
 
 class HttpsProxyClientService {
-  constructor(proxyConf = null) {
-    this.proxyConf = proxyConf;
+  constructor() {
     this.proxyAgent = null;
-    this.lastRequestHostname = null;
   }
 
   async _connectToProxy(
     url,
-    proxyIndex = 0,
-    retries = Number(process.env.CONNECT_REQUEST_RETRIES)
+    retries = Number(process.env.CONNECT_REQUEST_RETRIES),
+    proxyIndex = 0
   ) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const urlParsed = new URL(url);
       const abortController = new AbortController();
 
+      const allKeys = await redisService.getAll();
+
+      const unusedIPs = getUnusedItems(PROXY_LIST, allKeys)
+      const currentIP = unusedIPs[proxyIndex] ?? unusedIPs[0]
+
+      console.log({
+        allKeys,
+        unusedIPs,
+        currentIP
+      });
+
+      if (!currentIP) {
+        retries = 0
+        return reject(HTTP_RESPONSE_ERROR_MESSAGES.UNAVAILABLE)
+      }
+
+      await redisService.set(currentIP, 1)
+
       const options = {
-        ...getIPHostAndPort(proxies[proxyIndex]),
+        ...getIPHostAndPort(currentIP),
         method: 'CONNECT',
         path: `${urlParsed.hostname}:443`,
         timeout: Number(process.env.CONNECT_REQUEST_TIMEOUT),
@@ -40,7 +49,6 @@ class HttpsProxyClientService {
       }
 
       console.log(options, '<-- HTTP OPTIONS BEFORE CONNECT');
-      console.log({ proxyIndex }, '<-- PROXY INDEX BEFORE CONNECT');
 
       http
         .request(options)
@@ -78,13 +86,13 @@ class HttpsProxyClientService {
     })
       .then(agent => agent)
       .catch(error => {
-        console.log('_connectToProxy catch()', error);
-
         if (retries > 0) {
-          return this._connectToProxy(url, proxyIndex + 1, retries - 1)
+          return this._connectToProxy(url, retries - 1, proxyIndex + 1)
         }
 
-        return error
+        return error === HTTP_RESPONSE_ERROR_MESSAGES.UNAVAILABLE
+          ? HTTP_RESPONSE_ERROR_MESSAGES.UNAVAILABLE
+          : HTTP_RESPONSE_ERROR_MESSAGES.FAILED
       });
   }
 
@@ -92,30 +100,24 @@ class HttpsProxyClientService {
     return new Promise(async (resolve, reject) => {
       const urlParsed = new URL(url);
 
-      if (!this.proxyAgent || this.lastRequestHostname !== urlParsed.hostname) {
-        try {
-          const proxyConnection = await this._connectToProxy(url, this.proxyIndex)
+      try {
+        const proxyConnection = await this._connectToProxy(url)
 
-          if (proxyConnection instanceof https.Agent) {
-            this.proxyAgent = proxyConnection
-            this.lastRequestHostname = urlParsed.hostname;
-          } else {
-            return reject('Failed to fetch data in time!')
-          }
-        } catch (e) {
-          return reject(e, 'reject in getURL()');
+        if (proxyConnection instanceof https.Agent) {
+          this.proxyAgent = proxyConnection
+        } else {
+          return reject(proxyConnection)
         }
+      } catch (e) {
+        return reject(e, 'reject in getURL()');
       }
 
-      console.log(this.proxyAgent, `
-        PROXY AGENT BEFORE THE REQUEST
-      `);
       console.log(`getURL making GET request | ${urlParsed}`);
       console.log(`
-        ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------
-        ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------ ------------
+        ------------ ------------ ------------ ------------ ------------
       `);
 
       https
