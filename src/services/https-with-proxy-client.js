@@ -22,7 +22,11 @@ class HttpsWithProxyClientService {
     this.lastRequestHostname = null;
   }
 
-  async _connectToProxy(url, proxyIndex = 0, retries = 5) {
+  async _connectToProxy(
+    url,
+    proxyIndex = 0,
+    retries = Number(process.env.CONNECT_REQUEST_RETRIES)
+  ) {
     return new Promise((resolve, reject) => {
       const urlParsed = new URL(url);
       const abortController = new AbortController();
@@ -31,7 +35,7 @@ class HttpsWithProxyClientService {
         ...getIPHostAndPort(proxies[proxyIndex]),
         method: 'CONNECT',
         path: `${urlParsed.hostname}:443`,
-        timeout: 3000,
+        timeout: Number(process.env.CONNECT_REQUEST_TIMEOUT),
         signal: abortController.signal
       }
 

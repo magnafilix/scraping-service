@@ -1,6 +1,7 @@
 const app = require('./app');
 const debug = require('debug')('old-scraper:server');
 const http = require('http');
+require('dotenv').config()
 
 /**
  * Get port from environment and store in Express.
