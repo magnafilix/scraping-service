@@ -39,3 +39,9 @@ $ redis-server
 
 When application is up and running, make request to `http://localhost:3000?url=https://www.google.com`.<br />
 You should receive `body` (html) and `headers`.
+
+When the application is running, make a request to:
+```bash
+http://localhost:3000?url=https://www.google.com
+```
+You should get body (html) and headers.
