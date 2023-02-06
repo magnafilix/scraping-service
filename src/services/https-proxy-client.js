@@ -72,7 +72,7 @@ class HttpsProxyClientService {
     })
       .then(agent => agent)
       .catch(error => {
-        if (retries > 1) {
+        if (retries > 0) {
           return this._connectToProxy(url, retries - 1, proxyIndex + 1)
         }
 
