@@ -6,7 +6,7 @@ Steps:
 2. if connection was not established, app retries using different proxy
 3. step `2` repeats until the retries limit is reached - in this case, it returns `500` error
 4. for each connection attempt, `ip` gets set to `Redis` for `1` second
-    4. this is done to prevent making too many connection requests to the same proxy
+    1. this is done to prevent making too many connection requests to the same proxy
 
 ## Tech Stack
 
