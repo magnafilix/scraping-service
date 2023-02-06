@@ -1,5 +1,13 @@
 # scraping-service
 
+The app receives `url`, makes request (connecting to proxy server) to it to retrieve `html` and `headers`.</br>
+Steps:
+1. app establishes connection with a proxy server, then performs the request
+2. if connection was not established, app retries using different proxy
+3. step `2` repeats until the retries limit is reached - in this case, it returns `500` error
+4. for each connection attempt, `ip` gets set to `Redis` for `1` second
+    4. this is done to prevent making too many connection requests to the same proxy
+
 ## Tech Stack
 
 - [Express.js](https://expressjs.com/)
