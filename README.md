@@ -1,6 +1,7 @@
 # scraping-service
 
 The app receives `url`, makes request (connecting to proxy server) to it to retrieve `html` and `headers`.</br>
+
 Steps:
 1. app establishes connection with a proxy server, then performs the request
 2. if connection was not established, app retries using different proxy
