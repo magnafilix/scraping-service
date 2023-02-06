@@ -1,4 +1,4 @@
-# Scraping service (with proxy)
+# Scraping service ☞ (with proxy)
 
 The application receives a `url`, makes a request (by connecting to a proxy server) for `html` and `headers`.
 
