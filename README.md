@@ -18,6 +18,8 @@ Steps:
 
 Create `.env` file (inside the root directory) and copy variables from `.env.example` to `.env`.
 
+> **_NOTE:_** You can customize the `.env` variables to suit your needs.
+
 Then run following command:
 
 ```bash
