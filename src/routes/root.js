@@ -1,5 +1,6 @@
 const rootController = require('../controllers/root')
+const { validateUrl } = require('../middlewares/validate')
 
 module.exports = router => {
-  router.get('/', rootController.getUrl)
+  router.get('/', validateUrl, rootController.getUrl)
 }
